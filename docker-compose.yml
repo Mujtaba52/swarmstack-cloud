@@ -22,16 +22,16 @@ services:
     networks:
       - app-network
 
-  # ai-microservice:
-  #   build:
-  #     context: ./ai-microservice
-  #     args:
-  #       ENV_MODE: ${ENV}
-  #   container_name: ai-microservice
-  #   ports:
-  #     - "5000:5000"
-  #   networks:
-  #     - app-network
+  ai-microservice:
+    build:
+      context: ./ai-microservice
+      args:
+        ENV_MODE: ${ENV}
+    container_name: ai-microservice
+    ports:
+      - "5050:5000"
+    networks:
+      - app-network
 
 networks:
   app-network:
