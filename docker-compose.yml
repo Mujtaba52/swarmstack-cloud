@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: backend
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        ENV_MODE: ${ENV}
+    container_name: frontend
+    ports:
+      - "8080:80"
+    networks:
+      - app-network
+
+  # ai-microservice:
+  #   build:
+  #     context: ./ai-microservice
+  #     args:
+  #       ENV_MODE: ${ENV}
+  #   container_name: ai-microservice
+  #   ports:
+  #     - "5000:5000"
+  #   networks:
+  #     - app-network
+
+networks:
+  app-network:
