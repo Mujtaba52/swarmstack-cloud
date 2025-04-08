@@ -1,0 +1,24 @@
+@host = http://localhost:3000
+
+GET {{host}}
+
+###
+GET {{host}}/users
+
+###
+GET {{host}}/products
+
+###
+POST {{host}}/products/generate-embeddings
+
+###
+GET {{host}}/ai/chat?query="i want that device that is a touch screen and is bigger than a mobile and people use it to watch videos"
+
+###
+POST {{host}}/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john.doe@example.com"
+}
