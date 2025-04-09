@@ -16,10 +16,6 @@ export class AiService {
       openAIApiKey: process.env.OPENAI_API_KEY,
     });
   }
-  create(createAiDto: CreateAiDto) {
-    return 'This action adds a new ai';
-  }
-
   async aiChat(userQuery: string): Promise<any> {
     const index = this.pinecone.Index("exclusive-index");
     const userVector = await this.embedding.embedQuery(userQuery);
@@ -50,15 +46,4 @@ export class AiService {
     };
 }
 
-  findOne(id: number) {
-    return `This action returns a #${id} ai`;
-  }
-
-  update(id: number, updateAiDto: UpdateAiDto) {
-    return `This action updates a #${id} ai`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} ai`;
-  }
 }
