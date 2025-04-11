@@ -7,3 +7,10 @@ frontend/dist/
 # Optional: VSCode settings, environment files
 *.env
 .vscode/
+
+
+traefik/certs
+
+
+frontend/.env.local
+frontend/.env.production

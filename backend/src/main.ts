@@ -9,6 +9,8 @@ async function bootstrap() {
     "preflightContinue": false,
     "optionsSuccessStatus": 204
   })
+  app.setGlobalPrefix('api');
+
   await app.listen(3000);
 }
 bootstrap();
