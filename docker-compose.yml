@@ -1,15 +1,44 @@
 version: '3.8'
 
 services:
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    command:
+      - "--configFile=/etc/traefik/traefik.toml"  # Load static config from inside container
+    ports:
+      - "80:80"    # HTTP traffic
+      - "443:443"  # HTTPS traffic
+    volumes:
+      - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro  # Mount static config
+      - ./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml:ro  # Mount dynamic config (TLS, etc.)
+      - ./traefik/certs:/certs:ro  # Mount SSL certificates
+      - /var/run/docker.sock:/var/run/docker.sock:ro  # Let Traefik read Docker labels dynamically
+    networks:
+      - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"  # Dashboard access
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.routers.traefik.tls=true"
+
   backend:
     build: ./backend
     container_name: backend
-    ports:
-      - "3000:3000"
+    volumes:
+      - ./backend:/usr/src/app  # Mount source code for live updates during dev
+    command: npm run start  # Customize as needed
     environment:
       - PORT=3000
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`backend.localhost`)"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls=true"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
   frontend:
     build:
@@ -17,10 +46,18 @@ services:
       args:
         ENV_MODE: ${ENV}
     container_name: frontend
-    ports:
-      - "8080:80"
+    volumes:
+      - ./frontend:/usr/src/app  # Mount frontend source
+      - /usr/src/app/node_modules  # Avoid conflict between host and container modules
+    command: npm run dev -- --host  # --host is important for Vite to allow external access
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`frontend.localhost`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls=true"
+      - "traefik.http.services.frontend.loadbalancer.server.port=5173"
 
   ai-microservice:
     build:
@@ -28,10 +65,17 @@ services:
       args:
         ENV_MODE: ${ENV}
     container_name: ai-microservice
-    ports:
-      - "5050:5000"
+    volumes:
+      - ./ai-microservice:/usr/src/app
+    command: python app.py  # Update this if your entrypoint is different
     networks:
       - app-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ai.rule=Host(`ai.localhost`)"
+      - "traefik.http.routers.ai.entrypoints=websecure"
+      - "traefik.http.routers.ai.tls=true"
+      - "traefik.http.services.ai.loadbalancer.server.port=5000"
 
   postgres:
     image: postgres:15
@@ -43,13 +87,16 @@ services:
       POSTGRES_DB: myappdb
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
     networks:
       - app-network
-
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Check DB health
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 networks:
   app-network:
+
 volumes:
   postgres_data:
