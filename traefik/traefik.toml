@@ -1,0 +1,18 @@
+[entryPoints]
+  [entryPoints.web]
+    address = ":80"
+  [entryPoints.websecure]
+    address = ":443"
+
+[api]
+  dashboard = true
+  insecure = false  # ✅ safest way
+
+[providers.docker]
+  endpoint = "unix:///var/run/docker.sock"
+  exposedByDefault = false
+  defaultRule = "Host(`{{ trimPrefix `/` .Name }}.localhost`)"
+
+[providers.file]
+  filename = "/etc/traefik/dynamic_conf.toml"
+  watch = true
