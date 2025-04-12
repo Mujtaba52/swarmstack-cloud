@@ -1,22 +1,17 @@
-# build stage
-FROM node:18-alpine AS build
+FROM node:18-alpine
+
 WORKDIR /app
 
-# Pass in env mode
 ARG ENV_MODE
 ENV ENV_MODE=$ENV_MODE
 
 COPY package*.json ./
 RUN npm install
+
 COPY . .
 
-# Conditionally copy the correct .env file
 RUN if [ "$ENV_MODE" = "prod" ]; then cp .env.production .env; else cp .env.local .env; fi
 
-RUN npm run build
+EXPOSE 5173
 
-# serve via nginx
-FROM nginx:stable-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["npm", "run", "dev", "--", "--host"]
