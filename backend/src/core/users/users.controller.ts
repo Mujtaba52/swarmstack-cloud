@@ -7,18 +7,32 @@ import {
   Param,
   Delete,
   SerializeOptions,
-} from '@nestjs/common';
-import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { User } from './entities/user.entity';
+  UseGuards,
+  Req,
+} from "@nestjs/common";
+import { UsersService } from "./users.service";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { User } from "./entities/user.entity";
+import { AuthGuard } from "src/common/guards/auth.guard";
 
 @SerializeOptions({
-  excludePrefixes: ['_'],
+  excludePrefixes: ["_"],
 })
-@Controller('users')
+@Controller("users")
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  // Protected
+  @UseGuards(AuthGuard)
+  @Get("/me")
+  getMe(@Req() req: any) {
+    const user = req.user;
+    return {
+      token: req.headers.authorization,
+      email: user.email,
+    };
+  }
 
   @Post()
   create(@Body() createUserDto: CreateUserDto) {
@@ -31,18 +45,18 @@ export class UsersController {
     return users;
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
+  @Get(":id")
+  findOne(@Param("id") id: string) {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+  @Patch(":id")
+  update(@Param("id") id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(+id, updateUserDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Delete(":id")
+  remove(@Param("id") id: string) {
     return this.usersService.remove(+id);
   }
 }

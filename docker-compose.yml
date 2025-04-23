@@ -1,36 +1,55 @@
-version: '3.8'
+version: "3.8"
 
 services:
   traefik:
     image: traefik:v3.0
     container_name: traefik
     command:
-      - "--configFile=/etc/traefik/traefik.toml"  # Load static config from inside container
+      - "--configFile=/etc/traefik/traefik.toml" # Load static config from inside container
     ports:
-      - "80:80"    # HTTP traffic
-      - "443:443"  # HTTPS traffic
+      - "80:80" # HTTP traffic
+      - "443:443" # HTTPS traffic
     volumes:
-      - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro  # Mount static config
-      - ./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml:ro  # Mount dynamic config (TLS, etc.)
-      - ./traefik/certs:/certs:ro  # Mount SSL certificates
-      - /var/run/docker.sock:/var/run/docker.sock:ro  # Let Traefik read Docker labels dynamically
+      - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro # Mount static config
+      - ./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml:ro # Mount dynamic config (TLS, etc.)
+      - ./traefik/certs:/certs:ro # Mount SSL certificates
+      - /var/run/docker.sock:/var/run/docker.sock:ro # Let Traefik read Docker labels dynamically
     networks:
       - app-network
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)"  # Dashboard access
+      - "traefik.http.routers.traefik.rule=Host(`traefik.localhost`)" # Dashboard access
       - "traefik.http.routers.traefik.entrypoints=websecure"
       - "traefik.http.routers.traefik.service=api@internal"
       - "traefik.http.routers.traefik.tls=true"
+
+  auth:
+    # image: project-auth:dev # This is the image we have built. If missing, check build_images.sh
+    build: ./auth
+    volumes:
+      - ./auth:/usr/src/app # We want to mount our local auth folder to the container
+    networks:
+      - app-network # Note the network is the same as for traefik! Otherwise this won't work!
+    command: bun dev # This is the command we want to run. We are now overriding the default command.
+    environment:
+      - PORT=3001 # We want to set the port in the environment variables
+      - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=Host(`auth.localhost`)" # This is the backend service URL
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.routers.auth.tls=true"
+      - "traefik.http.services.auth.loadbalancer.server.port=3001"
 
   backend:
     build: ./backend
     container_name: backend
     volumes:
-      - ./backend:/usr/src/app  # Mount source code for live updates during dev
-    command: npm run start  # Customize as needed
+      - ./backend:/usr/src/app # Mount source code for live updates during dev
+    command: npm run start # Customize as needed
     environment:
       - PORT=3000
+      - JWT_SECRET=secret # We want to set the JWT_SECRET in the environment variables
     networks:
       - app-network
     labels:
@@ -49,9 +68,9 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/usr/src/app  # Mount frontend source
-      - /usr/src/app/node_modules  # Avoid conflict between host and container modules
-    command: npm run dev -- --host  # --host is important for Vite to allow external access
+      - ./frontend:/usr/src/app # Mount frontend source
+      - /usr/src/app/node_modules # Avoid conflict between host and container modules
+    command: npm run dev -- --host # --host is important for Vite to allow external access
     networks:
       - app-network
     labels:
@@ -69,7 +88,7 @@ services:
     container_name: ai-microservice
     volumes:
       - ./ai-microservice:/usr/src/app
-    command: python app.py  # Update this if your entrypoint is different
+    command: python app.py # Update this if your entrypoint is different
     networks:
       - app-network
     labels:
@@ -92,7 +111,7 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]  # Check DB health
+      test: ["CMD-SHELL", "pg_isready -U postgres"] # Check DB health
       interval: 10s
       timeout: 5s
       retries: 5
