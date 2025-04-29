@@ -23,7 +23,7 @@ services:
       - "traefik.http.routers.traefik.tls=true"
 
   auth:
-    image: swarmstack-cloud-auth:latest
+    image: mujhassan786/project-auth:latest
     networks:
       - app-network
     environment:
@@ -38,7 +38,7 @@ services:
       - "traefik.http.services.auth.loadbalancer.server.port=3001"
 
   backend:
-    image: swarmstack-cloud-backend:latest
+    image: mujhassan786/project-backend:latest
     networks:
       - app-network
     environment:
@@ -53,7 +53,7 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
 
   frontend:
-    image: swarmstack-cloud-frontend:latest
+    image: mujhassan786/project-frontend:latest
     ports:
       - "5173:5173"
     networks:
@@ -67,7 +67,7 @@ services:
       - "traefik.http.services.frontend.loadbalancer.server.port=5173"
 
   ai-microservice:
-    image: swarmstack-cloud-ai-microservice:latest
+    image: mujhassan786/project-ai:latest
     networks:
       - app-network
     command: python app.py
