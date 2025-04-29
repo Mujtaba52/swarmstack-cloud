@@ -6,8 +6,8 @@ services:
     command:
       - "--configFile=/etc/traefik/traefik.toml"
     ports:
-      - "8080:80"    # Changed to avoid conflict
-      - "8443:443"   # Optional: changed HTTPS as well
+      - "80:80"
+      - "443:443"
     volumes:
       - ./traefik/traefik.toml:/etc/traefik/traefik.toml:ro
       - ./traefik/dynamic_conf.toml:/etc/traefik/dynamic_conf.toml:ro
