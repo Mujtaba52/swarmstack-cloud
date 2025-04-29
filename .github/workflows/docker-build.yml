@@ -44,3 +44,10 @@ jobs:
           context: ./ai-microservice
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/project-ai:latest,${{ secrets.DOCKER_USERNAME }}/project-ai:${{ github.sha }}
+
+      - name: Build and push auth service image
+        uses: docker/build-push-action@v4
+        with:
+          context: ./auth
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/project-auth:latest,${{ secrets.DOCKER_USERNAME }}/project-auth:${{ github.sha }}
