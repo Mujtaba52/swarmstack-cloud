@@ -9,7 +9,7 @@ frontend/dist/
 .vscode/
 
 
-traefik/certs
+# traefik/certs
 
 
 frontend/.env.local
